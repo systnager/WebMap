@@ -6,6 +6,8 @@ import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.webkit.WebChromeClient
+import android.webkit.WebResourceRequest
 import android.webkit.WebSettings
 import android.webkit.WebView
 import android.webkit.WebViewClient
@@ -18,6 +20,7 @@ import com.bohdan2505.webmap.databinding.FragmentSecondBinding
 class SecondFragment : Fragment() {
 
     private var _binding: FragmentSecondBinding? = null
+    private val MAP_FOLDER = "map"
 
     // This property is only valid between onCreateView and
     // onDestroyView.
@@ -33,10 +36,19 @@ class SecondFragment : Fragment() {
 
         val mapWebView: WebView = binding.root.findViewById(R.id.map_web_view)
         val webSettings: WebSettings = mapWebView.settings
-        mapWebView.webViewClient = WebViewClient()
+        mapWebView.settings.javaScriptEnabled = true
+        mapWebView.webChromeClient = WebChromeClient()
+        mapWebView.webViewClient = object : WebViewClient() {
+            override fun shouldOverrideUrlLoading(view: WebView?, request: WebResourceRequest?): Boolean {
+                // Запобігає відкриттю сторінок у сторонніх браузерах
+                view?.loadUrl(request?.url.toString())
+                return true
+            }
+        }
 
-        webSettings.javaScriptEnabled = true
-        mapWebView.loadUrl("file:///android_asset/map/index.html")
+        // Вказати шлях до index.html у внутрішній директорії додатка
+        val indexPath = "file://${requireContext().filesDir.absolutePath}/$MAP_FOLDER/index.html"
+        mapWebView.loadUrl(indexPath)
 
 
         return binding.root

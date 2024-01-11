@@ -5,23 +5,29 @@ import android.content.Context
 import android.widget.EditText
 import android.widget.LinearLayout
 
-class TextInputDialog(context: Context, title: String, positiveButtonLabel: String, negativeButtonLabel: String) {
+class TextInputDialog(context: Context) {
 
+    private val context: Context = context
     private val editText = EditText(context)
-
-    var onTextEnteredListener: ((String) -> Unit)? = null
+    private val layout = LinearLayout(context)
+    private var onTextEnteredListener: OnTextEnteredListener? = null
 
     init {
-        val layout = LinearLayout(context)
         layout.orientation = LinearLayout.VERTICAL
         layout.addView(editText)
+    }
 
+    fun setOnTextEnteredListener(listener: OnTextEnteredListener) {
+        onTextEnteredListener = listener
+    }
+
+    fun showDialog(title: String, positiveButtonLabel: String, negativeButtonLabel: String) {
         val dialog = AlertDialog.Builder(context)
             .setTitle(title)
             .setView(layout)
             .setPositiveButton(positiveButtonLabel) { _, _ ->
                 val enteredText = editText.text.toString()
-                onTextEnteredListener?.invoke(enteredText)
+                onTextEnteredListener?.onTextEntered(enteredText)
             }
             .setNegativeButton(negativeButtonLabel) { dialog, _ ->
                 dialog.dismiss()
@@ -29,5 +35,9 @@ class TextInputDialog(context: Context, title: String, positiveButtonLabel: Stri
             .create()
 
         dialog.show()
+    }
+
+    interface OnTextEnteredListener {
+        fun onTextEntered(enteredText: String)
     }
 }

@@ -8,6 +8,7 @@ import java.io.FileInputStream
 import java.io.FileOutputStream
 import java.io.IOException
 import android.content.Context
+import java.util.zip.ZipInputStream
 
 class FileSystem {
     @SuppressLint("Range")
@@ -18,7 +19,8 @@ class FileSystem {
             cursor?.use {
                 if (it.moveToFirst()) {
                     val displayName = it.getString(it.getColumnIndex(OpenableColumns.DISPLAY_NAME))
-                    val appDirectory = this.createAppDirectory(requireContext, ZIP_ARCHIVE_FOLDER_NAME)
+                    val appDirectory = this.createAppDirectory(
+                        File(requireContext.filesDir, ZIP_ARCHIVE_FOLDER_NAME))
 
                     filePath = "${appDirectory.absolutePath}/$displayName"
                     val inputStream = requireContext.contentResolver.openInputStream(uri)
@@ -36,8 +38,7 @@ class FileSystem {
         return filePath
     }
 
-    fun createAppDirectory(requireContext: Context, ZIP_ARCHIVE_FOLDER_NAME: String): File {
-        val appDirectory = File(requireContext.filesDir, ZIP_ARCHIVE_FOLDER_NAME)
+    fun createAppDirectory(appDirectory: File): File {
         if (!appDirectory.exists()) {
             appDirectory.mkdir()
         }
@@ -59,5 +60,93 @@ class FileSystem {
             e.printStackTrace()
             // Обробка помилок копіювання файлу
         }
+    }
+
+    fun isValidFolderName(folderName: String): Boolean {
+        val regex = """^[a-zA-Z0-9_.\- ]+$""".toRegex()
+        val maxLength = 255
+        if (!folderName.matches(regex)) {
+            return false
+        } else if (" " in folderName) {
+            return false
+        }
+
+        return folderName.length <= maxLength
+    }
+
+    fun isFolderExists(folderName: String, context: Context): Boolean {
+        val appDirectory = File(context.filesDir, folderName)
+        return appDirectory.exists() && appDirectory.isDirectory
+    }
+
+    fun unzip(zipFile: File, outputFolder: File) {
+        val buffer = ByteArray(1024)
+
+        try {
+            val zipInputStream = ZipInputStream(FileInputStream(zipFile))
+            var zipEntry = zipInputStream.nextEntry
+
+            while (zipEntry != null) {
+                val entryName = zipEntry.name
+                val outputFile = File(outputFolder, entryName)
+
+                if (zipEntry.isDirectory) {
+                    outputFile.mkdirs()
+                } else {
+                    val outputStream = FileOutputStream(outputFile)
+                    var len: Int
+                    while (zipInputStream.read(buffer).also { len = it } > 0) {
+                        outputStream.write(buffer, 0, len)
+                    }
+                    outputStream.close()
+                }
+
+                zipEntry = zipInputStream.nextEntry
+            }
+
+            zipInputStream.closeEntry()
+            zipInputStream.close()
+        } catch (e: Exception) {
+            e.printStackTrace()
+        }
+    }
+
+    fun clearFolder(folder: File) {
+        if (folder.exists()) {
+            val files = folder.listFiles()
+            if (files != null) {
+                for (file in files) {
+                    if (file.isDirectory) {
+                        clearFolder(file)
+                    }
+                    file.delete()
+                }
+            }
+        }
+    }
+
+    fun copyFiles(source: File, destination: File) {
+        if (source.isDirectory) {
+            if (!destination.exists()) {
+                destination.mkdirs()
+            }
+
+            val files = source.listFiles()
+            if (files != null) {
+                for (file in files) {
+                    copyFiles(file, File(destination, file.name))
+                }
+            }
+        } else {
+            try {
+                source.copyTo(destination)
+            } catch (e: IOException) {
+                e.printStackTrace()
+            }
+        }
+    }
+
+    fun deleteFile(file: File): Boolean {
+        return file.exists() && file.delete()
     }
 }

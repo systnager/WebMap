@@ -13,6 +13,7 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.bohdan2505.webmap.databinding.FragmentHomeBinding
 import com.google.android.material.snackbar.Snackbar
+import java.io.File
 
 class HomeFragment : Fragment() {
 
@@ -44,6 +45,7 @@ class HomeFragment : Fragment() {
 
         // Налаштовуємо RecyclerView та його адаптер
         val recyclerView: RecyclerView = view.findViewById(R.id.archivesRecyclerView)
+        val fileSystem: FileSystem = FileSystem()
         archiveAdapter = ArchiveAdapter(archivesList)
         recyclerView.layoutManager = LinearLayoutManager(requireContext())
         recyclerView.adapter = archiveAdapter
@@ -73,17 +75,37 @@ class HomeFragment : Fragment() {
 
                 // Перевіряємо, чи файл має розширення .zip
                 if (filePath.endsWith(".zip", ignoreCase = true)) {
-                    val appDirectory = fileSystem.createAppDirectory(requireContext(), ZIP_ARCHIVE_FOLDER_NAME)
-                    fileSystem.copyFileToAppDirectory(filePath, appDirectory)
+                    val textInputDialog = TextInputDialog(binding.root.context)
+                    textInputDialog.setOnTextEnteredListener(object : TextInputDialog.OnTextEnteredListener {
+                        override fun onTextEntered(enteredText: String) {
+                            if (! fileSystem.isValidFolderName(enteredText)) {
+                                Snackbar.make(binding.root, "Невалідна назва. Видаліть спецсимволи, пробіли та обмежте довжину до 255 символів", Snackbar.LENGTH_LONG).show()
+                                return
+                            } else if (fileSystem.isFolderExists(enteredText, requireContext())) {
+                                Snackbar.make(binding.root, "Така папка вже існує", Snackbar.LENGTH_LONG).show()
+                                return
+                            }
 
-                    // Додаємо шлях архіву до списку та оновлюємо адаптер
-                    archivesList.add(filePath)
-                    archiveAdapter.notifyDataSetChanged()
-
-                    Snackbar.make(binding.root, "File copied to ${appDirectory.absolutePath}", Snackbar.LENGTH_LONG).show()
+                            fileSystem.createAppDirectory(File(requireContext().filesDir, "$ZIP_ARCHIVE_FOLDER_NAME/$enteredText"))
+                            Snackbar.make(binding.root, "Папку створено, очікуйте розпакування архіву", Snackbar.LENGTH_LONG).show()
+                            fileSystem.unzip(File(filePath), File(requireContext().filesDir, "$ZIP_ARCHIVE_FOLDER_NAME/$enteredText"))
+                            Snackbar.make(binding.root, "Архів розпаковано", Snackbar.LENGTH_LONG).show()
+                            fileSystem.deleteFile(File(filePath))
+                            fileSystem.clearFolder(File(requireContext().filesDir, MAP_FOLDER))
+                            Snackbar.make(binding.root, "Починаю копіювання карти", Snackbar.LENGTH_LONG).show()
+                            fileSystem.copyFiles(File(requireContext().filesDir, "$ZIP_ARCHIVE_FOLDER_NAME/$enteredText"), File(requireContext().filesDir, MAP_FOLDER))
+                            Snackbar.make(binding.root, "Копіювання закінчено", Snackbar.LENGTH_LONG).show()
+                            archivesList.add(enteredText)
+                            archiveAdapter.notifyDataSetChanged()
+                            Snackbar.make(binding.root, "Операції закінчено!", Snackbar.LENGTH_LONG).show()
+                        }
+                    })
+                    textInputDialog.showDialog("Введіть назву для карти без пробілів та спецсимволів", "Підтвердити ввід", "Відмінити")
                 } else {
                     // Якщо файл не має розширення .zip, ви можете взяти відповідні дії
+                    archiveAdapter.notifyDataSetChanged()
                     Snackbar.make(binding.root, "Please select a .zip file", Snackbar.LENGTH_SHORT).show()
+
                 }
             }
         }
