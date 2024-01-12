@@ -1,14 +1,16 @@
 package com.bohdan2505.webmap
 
+import android.R.attr.path
 import android.annotation.SuppressLint
+import android.content.Context
 import android.net.Uri
 import android.provider.OpenableColumns
 import java.io.File
 import java.io.FileInputStream
 import java.io.FileOutputStream
 import java.io.IOException
-import android.content.Context
 import java.util.zip.ZipInputStream
+
 
 class FileSystem {
     @SuppressLint("Range")
@@ -74,9 +76,8 @@ class FileSystem {
         return folderName.length <= maxLength
     }
 
-    fun isFolderExists(folderName: String, context: Context): Boolean {
-        val appDirectory = File(context.filesDir, folderName)
-        return appDirectory.exists() && appDirectory.isDirectory
+    fun isFolderExists(folder: File): Boolean {
+        return folder.exists() && folder.isDirectory
     }
 
     fun unzip(zipFile: File, outputFolder: File) {
@@ -148,5 +149,13 @@ class FileSystem {
 
     fun deleteFile(file: File): Boolean {
         return file.exists() && file.delete()
+    }
+
+    fun deleteFolder(folder: File): Boolean {
+        if (folder.isDirectory) {
+            this.clearFolder(folder)
+        }
+        folder.delete()
+        return ! folder.exists()
     }
 }

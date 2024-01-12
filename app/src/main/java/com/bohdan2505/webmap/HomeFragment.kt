@@ -28,11 +28,35 @@ class HomeFragment : Fragment() {
     private val archivesList = mutableListOf<String>()
     private lateinit var archiveAdapter: ArchiveAdapter
 
+    @SuppressLint("NotifyDataSetChanged")
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View {
         _binding = FragmentHomeBinding.inflate(inflater, container, false)
+
+        val parentFolder = File(requireContext().filesDir, ZIP_ARCHIVE_FOLDER_NAME)
+        val childDirectories = parentFolder.listFiles { file -> file.isDirectory }
+
+        // Налаштовуємо RecyclerView та його адаптер
+        val recyclerView: RecyclerView = binding.root.findViewById(R.id.archivesRecyclerView)
+        archiveAdapter = ArchiveAdapter(archivesList, ::onDeleteFolder, ::onEditFolder, ::onFolderItemClick)
+        recyclerView.layoutManager = LinearLayoutManager(requireContext())
+        recyclerView.adapter = archiveAdapter
+
+        if (archivesList.isEmpty()) {
+            childDirectories?.forEach { directory ->
+                archivesList.add(directory.name)
+                println(directory.name)
+            }
+            archiveAdapter.notifyDataSetChanged()
+            if (archivesList.isEmpty()) {
+                binding.emptyStateTextView.text = "Список порожній"
+            } else {
+                binding.emptyStateTextView.text = ""
+            }
+        }
+
         return binding.root
     }
 
@@ -43,13 +67,6 @@ class HomeFragment : Fragment() {
             findNavController().navigate(R.id.action_FirstFragment_to_SecondFragment)
         }
 
-        // Налаштовуємо RecyclerView та його адаптер
-        val recyclerView: RecyclerView = view.findViewById(R.id.archivesRecyclerView)
-        val fileSystem: FileSystem = FileSystem()
-        archiveAdapter = ArchiveAdapter(archivesList)
-        recyclerView.layoutManager = LinearLayoutManager(requireContext())
-        recyclerView.adapter = archiveAdapter
-
         binding.chooseFileButton.setOnClickListener {
             val intent = Intent()
                 .setType("*/*")
@@ -57,7 +74,7 @@ class HomeFragment : Fragment() {
                 .putExtra(Intent.EXTRA_MIME_TYPES, arrayOf(ZIP_MIME_TYPE))
 
             startActivityForResult(
-                Intent.createChooser(intent, "Select a .zip file"),
+                Intent.createChooser(intent, "Виберіть файл .zip"),
                 PICK_FILE_REQUEST_CODE
             )
         }
@@ -70,7 +87,7 @@ class HomeFragment : Fragment() {
 
         if (requestCode == PICK_FILE_REQUEST_CODE && resultCode == Activity.RESULT_OK) {
             data?.data?.let { uri ->
-                val fileSystem :FileSystem = FileSystem()
+                val fileSystem = FileSystem()
                 val filePath: String = fileSystem.getFilePathFromUri(uri, requireContext(), ZIP_ARCHIVE_FOLDER_NAME)
 
                 // Перевіряємо, чи файл має розширення .zip
@@ -78,10 +95,10 @@ class HomeFragment : Fragment() {
                     val textInputDialog = TextInputDialog(binding.root.context)
                     textInputDialog.setOnTextEnteredListener(object : TextInputDialog.OnTextEnteredListener {
                         override fun onTextEntered(enteredText: String) {
-                            if (! fileSystem.isValidFolderName(enteredText)) {
+                            if (!fileSystem.isValidFolderName(enteredText)) {
                                 Snackbar.make(binding.root, "Невалідна назва. Видаліть спецсимволи, пробіли та обмежте довжину до 255 символів", Snackbar.LENGTH_LONG).show()
                                 return
-                            } else if (fileSystem.isFolderExists(enteredText, requireContext())) {
+                            } else if (fileSystem.isFolderExists(File(requireContext().filesDir, "$ZIP_ARCHIVE_FOLDER_NAME/$enteredText"))) {
                                 Snackbar.make(binding.root, "Така папка вже існує", Snackbar.LENGTH_LONG).show()
                                 return
                             }
@@ -95,6 +112,7 @@ class HomeFragment : Fragment() {
                             Snackbar.make(binding.root, "Починаю копіювання карти", Snackbar.LENGTH_LONG).show()
                             fileSystem.copyFiles(File(requireContext().filesDir, "$ZIP_ARCHIVE_FOLDER_NAME/$enteredText"), File(requireContext().filesDir, MAP_FOLDER))
                             Snackbar.make(binding.root, "Копіювання закінчено", Snackbar.LENGTH_LONG).show()
+                            binding.emptyStateTextView.text = ""
                             archivesList.add(enteredText)
                             archiveAdapter.notifyDataSetChanged()
                             Snackbar.make(binding.root, "Операції закінчено!", Snackbar.LENGTH_LONG).show()
@@ -104,11 +122,35 @@ class HomeFragment : Fragment() {
                 } else {
                     // Якщо файл не має розширення .zip, ви можете взяти відповідні дії
                     archiveAdapter.notifyDataSetChanged()
-                    Snackbar.make(binding.root, "Please select a .zip file", Snackbar.LENGTH_SHORT).show()
+                    Snackbar.make(binding.root, "Будь ласка, виберіть файл .zip", Snackbar.LENGTH_SHORT).show()
 
                 }
             }
         }
+    }
+
+    @SuppressLint("NotifyDataSetChanged")
+    private fun onDeleteFolder(folderName: String) {
+        val fileSystem = FileSystem()
+        if (fileSystem.deleteFolder(File(requireContext().filesDir, "$ZIP_ARCHIVE_FOLDER_NAME/$folderName"))) {
+            archivesList.remove(folderName)
+            archiveAdapter.notifyDataSetChanged()
+            if (archivesList.isEmpty()) {
+                binding.emptyStateTextView.text = "Список порожній"
+            }
+            Snackbar.make(binding.root, "Папку видалено", Snackbar.LENGTH_SHORT).show()
+        } else {
+            Snackbar.make(binding.root, "Не вдалося видалити папку", Snackbar.LENGTH_SHORT).show()
+        }
+
+    }
+
+    private fun onEditFolder(folderName: String) {
+        Snackbar.make(binding.root, "Редагування папки", Snackbar.LENGTH_SHORT).show()
+    }
+
+    private fun onFolderItemClick(folderName: String) {
+        Snackbar.make(binding.root, "Відкриття карти", Snackbar.LENGTH_SHORT).show()
     }
 
     override fun onDestroyView() {
