@@ -33,6 +33,7 @@ class SecondFragment : Fragment() {
         val mapWebView: WebView = binding.root.findViewById(R.id.map_web_view)
         val webSettings: WebSettings = mapWebView.settings
         mapWebView.settings.javaScriptEnabled = true
+        webSettings.allowFileAccess = true
         mapWebView.webChromeClient = WebChromeClient()
         mapWebView.webViewClient = object : WebViewClient() {
             override fun shouldOverrideUrlLoading(view: WebView?, request: WebResourceRequest?): Boolean {
