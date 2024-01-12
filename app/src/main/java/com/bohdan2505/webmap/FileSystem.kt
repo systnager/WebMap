@@ -4,6 +4,8 @@ import android.R.attr.path
 import android.annotation.SuppressLint
 import android.content.Context
 import android.net.Uri
+import android.os.Build
+import android.os.Environment
 import android.provider.OpenableColumns
 import java.io.File
 import java.io.FileInputStream
@@ -159,11 +161,7 @@ class FileSystem {
         return ! folder.exists()
     }
 
-    fun renameFolder(oldName: String, newName: String, context: Context): Boolean {
-        val oldFolder = File(context.filesDir, oldName)
-        val newFolder = File(context.filesDir, newName)
-
+    fun renameFolder(oldFolder: File, newFolder: File): Boolean {
         return oldFolder.renameTo(newFolder)
     }
-
 }

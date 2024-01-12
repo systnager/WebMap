@@ -2,6 +2,7 @@ package com.bohdan2505.webmap
 
 import android.annotation.SuppressLint
 import android.os.Bundle
+import android.os.Environment
 import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
 import android.view.View
@@ -47,7 +48,7 @@ class SecondFragment : Fragment() {
         }
 
         // Вказати шлях до index.html у внутрішній директорії додатка
-        val indexPath = "file://${requireContext().filesDir.absolutePath}/$MAP_FOLDER/index.html"
+        val indexPath = "file://${Environment.getExternalStorageDirectory().absolutePath}/WebMap/$MAP_FOLDER/index.html"
         mapWebView.loadUrl(indexPath)
 
 

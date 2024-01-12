@@ -4,6 +4,7 @@ import android.annotation.SuppressLint
 import android.app.Activity
 import android.content.Intent
 import android.os.Bundle
+import android.os.Environment
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -20,9 +21,14 @@ class HomeFragment : Fragment() {
     private var _binding: FragmentHomeBinding? = null
     private val binding get() = _binding!!
 
+    private val APP_FOLDER_NAME = "WebMap"
+    private val ZIP_ARCHIVE_FOLDER_NAME = "maps"
+    private val ROOT_PATH = Environment.getExternalStorageDirectory().absolutePath
+    private val APP_FOLDER_PATH = File(ROOT_PATH, APP_FOLDER_NAME).absolutePath
+    private val MAPS_FOLDER_PATH = File(APP_FOLDER_PATH, ZIP_ARCHIVE_FOLDER_NAME).absolutePath
     private val PICK_FILE_REQUEST_CODE = 111
     private val ZIP_MIME_TYPE = "application/zip"
-    private val ZIP_ARCHIVE_FOLDER_NAME = "maps"
+
     private val MAP_FOLDER = "map"
 
     private val archivesList = mutableListOf<String>()
@@ -35,7 +41,7 @@ class HomeFragment : Fragment() {
     ): View {
         _binding = FragmentHomeBinding.inflate(inflater, container, false)
 
-        val parentFolder = File(requireContext().filesDir, ZIP_ARCHIVE_FOLDER_NAME)
+        val parentFolder = File(MAPS_FOLDER_PATH)
         val childDirectories = parentFolder.listFiles { file -> file.isDirectory }
 
         // Налаштовуємо RecyclerView та його адаптер
@@ -98,19 +104,19 @@ class HomeFragment : Fragment() {
                             if (!fileSystem.isValidFolderName(enteredText)) {
                                 Snackbar.make(binding.root, "Невалідна назва. Видаліть спецсимволи, пробіли та обмежте довжину до 255 символів", Snackbar.LENGTH_LONG).show()
                                 return
-                            } else if (fileSystem.isFolderExists(File(requireContext().filesDir, "$ZIP_ARCHIVE_FOLDER_NAME/$enteredText"))) {
+                            } else if (fileSystem.isFolderExists(File(MAPS_FOLDER_PATH, enteredText))) {
                                 Snackbar.make(binding.root, "Така папка вже існує", Snackbar.LENGTH_LONG).show()
                                 return
                             }
 
-                            fileSystem.createAppDirectory(File(requireContext().filesDir, "$ZIP_ARCHIVE_FOLDER_NAME/$enteredText"))
+                            fileSystem.createAppDirectory(File(MAPS_FOLDER_PATH, enteredText))
                             Snackbar.make(binding.root, "Папку створено, очікуйте розпакування архіву", Snackbar.LENGTH_LONG).show()
-                            fileSystem.unzip(File(filePath), File(requireContext().filesDir, "$ZIP_ARCHIVE_FOLDER_NAME/$enteredText"))
+                            fileSystem.unzip(File(filePath), File(MAPS_FOLDER_PATH, enteredText))
                             Snackbar.make(binding.root, "Архів розпаковано", Snackbar.LENGTH_LONG).show()
                             fileSystem.deleteFile(File(filePath))
-                            fileSystem.clearFolder(File(requireContext().filesDir, MAP_FOLDER))
+                            fileSystem.clearFolder(File(APP_FOLDER_PATH, MAP_FOLDER))
                             Snackbar.make(binding.root, "Починаю копіювання карти", Snackbar.LENGTH_LONG).show()
-                            fileSystem.copyFiles(File(requireContext().filesDir, "$ZIP_ARCHIVE_FOLDER_NAME/$enteredText"), File(requireContext().filesDir, MAP_FOLDER))
+                            fileSystem.copyFiles(File(MAPS_FOLDER_PATH, enteredText), File(APP_FOLDER_PATH, MAP_FOLDER))
                             Snackbar.make(binding.root, "Копіювання закінчено", Snackbar.LENGTH_LONG).show()
                             binding.emptyStateTextView.text = ""
                             archivesList.add(enteredText)
@@ -132,7 +138,7 @@ class HomeFragment : Fragment() {
     @SuppressLint("NotifyDataSetChanged")
     private fun onDeleteFolder(folderName: String) {
         val fileSystem = FileSystem()
-        if (fileSystem.deleteFolder(File(requireContext().filesDir, "$ZIP_ARCHIVE_FOLDER_NAME/$folderName"))) {
+        if (fileSystem.deleteFolder(File(MAPS_FOLDER_PATH, folderName))) {
             archivesList.remove(folderName)
             archiveAdapter.notifyDataSetChanged()
             if (archivesList.isEmpty()) {
@@ -154,12 +160,12 @@ class HomeFragment : Fragment() {
                 if (!fileSystem.isValidFolderName(enteredText)) {
                     Snackbar.make(binding.root, "Невалідна назва. Видаліть спецсимволи, пробіли та обмежте довжину до 255 символів", Snackbar.LENGTH_LONG).show()
                     return
-                } else if (fileSystem.isFolderExists(File(requireContext().filesDir, "$ZIP_ARCHIVE_FOLDER_NAME/$enteredText"))) {
+                } else if (fileSystem.isFolderExists(File(MAPS_FOLDER_PATH, enteredText))) {
                     Snackbar.make(binding.root, "Така папка вже існує", Snackbar.LENGTH_LONG).show()
                     return
                 }
 
-                if (fileSystem.renameFolder("$ZIP_ARCHIVE_FOLDER_NAME/$folderName", "$ZIP_ARCHIVE_FOLDER_NAME/$enteredText", requireContext())) {
+                if (fileSystem.renameFolder(File(MAPS_FOLDER_PATH, folderName), File(MAPS_FOLDER_PATH, enteredText))) {
                     // Оновіть ім'я в списку та адаптері
                     val index = archivesList.indexOf(folderName)
                     archivesList[index] = enteredText
@@ -177,9 +183,9 @@ class HomeFragment : Fragment() {
     private fun onFolderItemClick(folderName: String) {
         val fileSystem = FileSystem()
         Snackbar.make(binding.root, "Проводжу підготовку до копіювання карти", Snackbar.LENGTH_LONG).show()
-        fileSystem.clearFolder(File(requireContext().filesDir, MAP_FOLDER))
+        fileSystem.clearFolder(File(APP_FOLDER_PATH, MAP_FOLDER))
         Snackbar.make(binding.root, "Починаю копіювання карти", Snackbar.LENGTH_LONG).show()
-        fileSystem.copyFiles(File(requireContext().filesDir, "$ZIP_ARCHIVE_FOLDER_NAME/$folderName"), File(requireContext().filesDir, MAP_FOLDER))
+        fileSystem.copyFiles(File(MAPS_FOLDER_PATH, folderName), File(APP_FOLDER_PATH, MAP_FOLDER))
         Snackbar.make(binding.root, "Копіювання закінчено", Snackbar.LENGTH_LONG).show()
     }
 
