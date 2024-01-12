@@ -158,4 +158,12 @@ class FileSystem {
         folder.delete()
         return ! folder.exists()
     }
+
+    fun renameFolder(oldName: String, newName: String, context: Context): Boolean {
+        val oldFolder = File(context.filesDir, oldName)
+        val newFolder = File(context.filesDir, newName)
+
+        return oldFolder.renameTo(newFolder)
+    }
+
 }

@@ -146,8 +146,33 @@ class HomeFragment : Fragment() {
     }
 
     private fun onEditFolder(folderName: String) {
-        Snackbar.make(binding.root, "Редагування папки", Snackbar.LENGTH_SHORT).show()
+        val textInputDialog = TextInputDialog(binding.root.context)
+        val fileSystem = FileSystem()
+        textInputDialog.setOnTextEnteredListener(object : TextInputDialog.OnTextEnteredListener {
+            @SuppressLint("NotifyDataSetChanged")
+            override fun onTextEntered(enteredText: String) {
+                if (!fileSystem.isValidFolderName(enteredText)) {
+                    Snackbar.make(binding.root, "Невалідна назва. Видаліть спецсимволи, пробіли та обмежте довжину до 255 символів", Snackbar.LENGTH_LONG).show()
+                    return
+                } else if (fileSystem.isFolderExists(File(requireContext().filesDir, "$ZIP_ARCHIVE_FOLDER_NAME/$enteredText"))) {
+                    Snackbar.make(binding.root, "Така папка вже існує", Snackbar.LENGTH_LONG).show()
+                    return
+                }
+
+                if (fileSystem.renameFolder("$ZIP_ARCHIVE_FOLDER_NAME/$folderName", "$ZIP_ARCHIVE_FOLDER_NAME/$enteredText", requireContext())) {
+                    // Оновіть ім'я в списку та адаптері
+                    val index = archivesList.indexOf(folderName)
+                    archivesList[index] = enteredText
+                    archiveAdapter.notifyDataSetChanged()
+                    Snackbar.make(binding.root, "Папку перейменовано", Snackbar.LENGTH_LONG).show()
+                } else {
+                    Snackbar.make(binding.root, "Не вдалося перейменувати папку", Snackbar.LENGTH_LONG).show()
+                }
+            }
+        })
+        textInputDialog.showDialog("Введіть нову назву для карти без пробілів та спецсимволів", "Підтвердити ввід", "Відмінити")
     }
+
 
     private fun onFolderItemClick(folderName: String) {
         Snackbar.make(binding.root, "Відкриття карти", Snackbar.LENGTH_SHORT).show()
