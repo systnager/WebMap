@@ -175,7 +175,12 @@ class HomeFragment : Fragment() {
 
 
     private fun onFolderItemClick(folderName: String) {
-        Snackbar.make(binding.root, "Відкриття карти", Snackbar.LENGTH_SHORT).show()
+        val fileSystem = FileSystem()
+        Snackbar.make(binding.root, "Проводжу підготовку до копіювання карти", Snackbar.LENGTH_LONG).show()
+        fileSystem.clearFolder(File(requireContext().filesDir, MAP_FOLDER))
+        Snackbar.make(binding.root, "Починаю копіювання карти", Snackbar.LENGTH_LONG).show()
+        fileSystem.copyFiles(File(requireContext().filesDir, "$ZIP_ARCHIVE_FOLDER_NAME/$folderName"), File(requireContext().filesDir, MAP_FOLDER))
+        Snackbar.make(binding.root, "Копіювання закінчено", Snackbar.LENGTH_LONG).show()
     }
 
     override fun onDestroyView() {
