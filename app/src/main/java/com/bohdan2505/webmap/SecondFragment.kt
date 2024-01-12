@@ -2,7 +2,6 @@ package com.bohdan2505.webmap
 
 import android.annotation.SuppressLint
 import android.os.Bundle
-import android.os.Environment
 import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
 import android.view.View
@@ -12,7 +11,6 @@ import android.webkit.WebResourceRequest
 import android.webkit.WebSettings
 import android.webkit.WebView
 import android.webkit.WebViewClient
-import androidx.navigation.fragment.findNavController
 import com.bohdan2505.webmap.databinding.FragmentSecondBinding
 
 /**
@@ -21,10 +19,7 @@ import com.bohdan2505.webmap.databinding.FragmentSecondBinding
 class SecondFragment : Fragment() {
 
     private var _binding: FragmentSecondBinding? = null
-    private val MAP_FOLDER = "map"
 
-    // This property is only valid between onCreateView and
-    // onDestroyView.
     private val binding get() = _binding!!
 
     @SuppressLint("SetJavaScriptEnabled")
@@ -34,7 +29,7 @@ class SecondFragment : Fragment() {
     ): View {
 
         _binding = FragmentSecondBinding.inflate(inflater, container, false)
-
+        val pathToHtml = arguments?.getString("html_path").toString()
         val mapWebView: WebView = binding.root.findViewById(R.id.map_web_view)
         val webSettings: WebSettings = mapWebView.settings
         mapWebView.settings.javaScriptEnabled = true
@@ -46,10 +41,8 @@ class SecondFragment : Fragment() {
                 return true
             }
         }
-
         // Вказати шлях до index.html у внутрішній директорії додатка
-        val indexPath = "file://${Environment.getExternalStorageDirectory().absolutePath}/WebMap/$MAP_FOLDER/index.html"
-        mapWebView.loadUrl(indexPath)
+        mapWebView.loadUrl("file:///$pathToHtml")
 
 
         return binding.root

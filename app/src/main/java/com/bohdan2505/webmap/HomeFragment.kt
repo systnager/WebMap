@@ -21,15 +21,13 @@ class HomeFragment : Fragment() {
     private var _binding: FragmentHomeBinding? = null
     private val binding get() = _binding!!
 
-    private val APP_FOLDER_NAME = "WebMap"
-    private val ZIP_ARCHIVE_FOLDER_NAME = "maps"
-    private val ROOT_PATH = Environment.getExternalStorageDirectory().absolutePath
-    private val APP_FOLDER_PATH = File(ROOT_PATH, APP_FOLDER_NAME).absolutePath
-    private val MAPS_FOLDER_PATH = File(APP_FOLDER_PATH, ZIP_ARCHIVE_FOLDER_NAME).absolutePath
-    private val PICK_FILE_REQUEST_CODE = 111
-    private val ZIP_MIME_TYPE = "application/zip"
-
-    private val MAP_FOLDER = "map"
+    private val appFolderName = "WebMap"
+    private val mapsListFolderName = "maps"
+    private val rootPath = Environment.getExternalStorageDirectory().absolutePath
+    private val appFolderPath = File(rootPath, appFolderName).absolutePath
+    private val mapFolderPath = File(appFolderPath, mapsListFolderName).absolutePath
+    private val pickFileRequestCode = 111
+    private val zipMimeType = "application/zip"
 
     private val archivesList = mutableListOf<String>()
     private lateinit var archiveAdapter: ArchiveAdapter
@@ -41,7 +39,7 @@ class HomeFragment : Fragment() {
     ): View {
         _binding = FragmentHomeBinding.inflate(inflater, container, false)
 
-        val parentFolder = File(MAPS_FOLDER_PATH)
+        val parentFolder = File(mapFolderPath)
         val childDirectories = parentFolder.listFiles { file -> file.isDirectory }
 
         // Налаштовуємо RecyclerView та його адаптер
@@ -70,18 +68,26 @@ class HomeFragment : Fragment() {
         super.onViewCreated(view, savedInstanceState)
 
         binding.buttonFirst.setOnClickListener {
-            findNavController().navigate(R.id.action_FirstFragment_to_SecondFragment)
+            Snackbar.make(binding.root, "Запуск останньо відкритої карти. У розробці", Snackbar.LENGTH_LONG).show()
+//            val dataToPass = "index.html"
+//            val bundle = Bundle()
+//            bundle.putString("html_path", dataToPass)
+//
+//            val destinationFragment = SecondFragment()
+//            destinationFragment.arguments = bundle
+//
+//            findNavController().navigate(R.id.action_FirstFragment_to_SecondFragment, bundle)
         }
 
         binding.chooseFileButton.setOnClickListener {
             val intent = Intent()
                 .setType("*/*")
                 .setAction(Intent.ACTION_GET_CONTENT)
-                .putExtra(Intent.EXTRA_MIME_TYPES, arrayOf(ZIP_MIME_TYPE))
+                .putExtra(Intent.EXTRA_MIME_TYPES, arrayOf(zipMimeType))
 
             startActivityForResult(
                 Intent.createChooser(intent, "Виберіть файл .zip"),
-                PICK_FILE_REQUEST_CODE
+                pickFileRequestCode
             )
         }
     }
@@ -91,10 +97,10 @@ class HomeFragment : Fragment() {
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
         super.onActivityResult(requestCode, resultCode, data)
 
-        if (requestCode == PICK_FILE_REQUEST_CODE && resultCode == Activity.RESULT_OK) {
+        if (requestCode == pickFileRequestCode && resultCode == Activity.RESULT_OK) {
             data?.data?.let { uri ->
                 val fileSystem = FileSystem()
-                val filePath: String = fileSystem.getFilePathFromUri(uri, requireContext(), ZIP_ARCHIVE_FOLDER_NAME)
+                val filePath: String = fileSystem.getFilePathFromUri(uri, requireContext(), mapsListFolderName)
 
                 // Перевіряємо, чи файл має розширення .zip
                 if (filePath.endsWith(".zip", ignoreCase = true)) {
@@ -104,24 +110,19 @@ class HomeFragment : Fragment() {
                             if (!fileSystem.isValidFolderName(enteredText)) {
                                 Snackbar.make(binding.root, "Невалідна назва. Видаліть спецсимволи, пробіли та обмежте довжину до 255 символів", Snackbar.LENGTH_LONG).show()
                                 return
-                            } else if (fileSystem.isFolderExists(File(MAPS_FOLDER_PATH, enteredText))) {
+                            } else if (fileSystem.isFolderExists(File(mapFolderPath, enteredText))) {
                                 Snackbar.make(binding.root, "Така папка вже існує", Snackbar.LENGTH_LONG).show()
                                 return
                             }
 
-                            fileSystem.createAppDirectory(File(MAPS_FOLDER_PATH, enteredText))
+                            fileSystem.createAppDirectory(File(mapFolderPath, enteredText))
                             Snackbar.make(binding.root, "Папку створено, очікуйте розпакування архіву", Snackbar.LENGTH_LONG).show()
-                            fileSystem.unzip(File(filePath), File(MAPS_FOLDER_PATH, enteredText))
-                            Snackbar.make(binding.root, "Архів розпаковано", Snackbar.LENGTH_LONG).show()
+                            fileSystem.unzip(File(filePath), File(mapFolderPath, enteredText))
                             fileSystem.deleteFile(File(filePath))
-                            fileSystem.clearFolder(File(APP_FOLDER_PATH, MAP_FOLDER))
-                            Snackbar.make(binding.root, "Починаю копіювання карти", Snackbar.LENGTH_LONG).show()
-                            fileSystem.copyFiles(File(MAPS_FOLDER_PATH, enteredText), File(APP_FOLDER_PATH, MAP_FOLDER))
-                            Snackbar.make(binding.root, "Копіювання закінчено", Snackbar.LENGTH_LONG).show()
                             binding.emptyStateTextView.text = ""
                             archivesList.add(enteredText)
                             archiveAdapter.notifyDataSetChanged()
-                            Snackbar.make(binding.root, "Операції закінчено!", Snackbar.LENGTH_LONG).show()
+                            Snackbar.make(binding.root, "Архів розпаковано", Snackbar.LENGTH_LONG).show()
                         }
                     })
                     textInputDialog.showDialog("Введіть назву для карти без пробілів та спецсимволів", "Підтвердити ввід", "Відмінити")
@@ -138,7 +139,7 @@ class HomeFragment : Fragment() {
     @SuppressLint("NotifyDataSetChanged")
     private fun onDeleteFolder(folderName: String) {
         val fileSystem = FileSystem()
-        if (fileSystem.deleteFolder(File(MAPS_FOLDER_PATH, folderName))) {
+        if (fileSystem.deleteFolder(File(mapFolderPath, folderName))) {
             archivesList.remove(folderName)
             archiveAdapter.notifyDataSetChanged()
             if (archivesList.isEmpty()) {
@@ -160,12 +161,12 @@ class HomeFragment : Fragment() {
                 if (!fileSystem.isValidFolderName(enteredText)) {
                     Snackbar.make(binding.root, "Невалідна назва. Видаліть спецсимволи, пробіли та обмежте довжину до 255 символів", Snackbar.LENGTH_LONG).show()
                     return
-                } else if (fileSystem.isFolderExists(File(MAPS_FOLDER_PATH, enteredText))) {
+                } else if (fileSystem.isFolderExists(File(mapFolderPath, enteredText))) {
                     Snackbar.make(binding.root, "Така папка вже існує", Snackbar.LENGTH_LONG).show()
                     return
                 }
 
-                if (fileSystem.renameFolder(File(MAPS_FOLDER_PATH, folderName), File(MAPS_FOLDER_PATH, enteredText))) {
+                if (fileSystem.renameFolder(File(mapFolderPath, folderName), File(mapFolderPath, enteredText))) {
                     // Оновіть ім'я в списку та адаптері
                     val index = archivesList.indexOf(folderName)
                     archivesList[index] = enteredText
@@ -181,12 +182,15 @@ class HomeFragment : Fragment() {
 
 
     private fun onFolderItemClick(folderName: String) {
-        val fileSystem = FileSystem()
-        Snackbar.make(binding.root, "Проводжу підготовку до копіювання карти", Snackbar.LENGTH_LONG).show()
-        fileSystem.clearFolder(File(APP_FOLDER_PATH, MAP_FOLDER))
-        Snackbar.make(binding.root, "Починаю копіювання карти", Snackbar.LENGTH_LONG).show()
-        fileSystem.copyFiles(File(MAPS_FOLDER_PATH, folderName), File(APP_FOLDER_PATH, MAP_FOLDER))
-        Snackbar.make(binding.root, "Копіювання закінчено", Snackbar.LENGTH_LONG).show()
+        FileSystem()
+        val dataToPass = File("$mapFolderPath/$folderName/", "index.html").absolutePath
+        val bundle = Bundle()
+        bundle.putString("html_path", dataToPass)
+
+        val destinationFragment = SecondFragment()
+        destinationFragment.arguments = bundle
+
+        findNavController().navigate(R.id.action_FirstFragment_to_SecondFragment, bundle)
     }
 
     override fun onDestroyView() {
