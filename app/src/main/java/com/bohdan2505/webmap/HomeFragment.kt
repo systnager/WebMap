@@ -3,17 +3,24 @@ package com.bohdan2505.webmap
 import android.annotation.SuppressLint
 import android.app.Activity
 import android.content.Intent
+import android.os.Build
 import android.os.Bundle
 import android.os.Environment
+import android.provider.Settings
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import androidx.activity.result.ActivityResultLauncher
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.annotation.RequiresApi
 import androidx.fragment.app.Fragment
+import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.bohdan2505.webmap.databinding.FragmentHomeBinding
 import com.google.android.material.snackbar.Snackbar
+import kotlinx.coroutines.launch
 import java.io.File
 
 class HomeFragment : Fragment() {
@@ -42,7 +49,6 @@ class HomeFragment : Fragment() {
         val parentFolder = File(mapFolderPath)
         val childDirectories = parentFolder.listFiles { file -> file.isDirectory }
 
-        // Налаштовуємо RecyclerView та його адаптер
         val recyclerView: RecyclerView = binding.root.findViewById(R.id.archivesRecyclerView)
         archiveAdapter = ArchiveAdapter(archivesList, ::onDeleteFolder, ::onEditFolder, ::onFolderItemClick)
         recyclerView.layoutManager = LinearLayoutManager(requireContext())
@@ -51,7 +57,6 @@ class HomeFragment : Fragment() {
         if (archivesList.isEmpty()) {
             childDirectories?.forEach { directory ->
                 archivesList.add(directory.name)
-                println(directory.name)
             }
             archiveAdapter.notifyDataSetChanged()
             if (archivesList.isEmpty()) {
@@ -64,19 +69,16 @@ class HomeFragment : Fragment() {
         return binding.root
     }
 
+    @RequiresApi(Build.VERSION_CODES.R)
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
+        viewLifecycleOwner.lifecycleScope.launch {
+            checkAndRequestStoragePermission()
+        }
+
         binding.buttonFirst.setOnClickListener {
             Snackbar.make(binding.root, "Запуск останньо відкритої карти. У розробці", Snackbar.LENGTH_LONG).show()
-//            val dataToPass = "index.html"
-//            val bundle = Bundle()
-//            bundle.putString("html_path", dataToPass)
-//
-//            val destinationFragment = SecondFragment()
-//            destinationFragment.arguments = bundle
-//
-//            findNavController().navigate(R.id.action_FirstFragment_to_SecondFragment, bundle)
         }
 
         binding.chooseFileButton.setOnClickListener {
@@ -92,6 +94,27 @@ class HomeFragment : Fragment() {
         }
     }
 
+    @RequiresApi(Build.VERSION_CODES.R)
+    private val launcher: ActivityResultLauncher<Intent> =
+        registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
+            if (Environment.isExternalStorageManager()) {
+                Snackbar.make(binding.root, "Дозвіл надано", Snackbar.LENGTH_LONG).show()
+            } else {
+                Snackbar.make(binding.root, "Потрібно надати дозвіл. Роботу додатку не гарантовано", Snackbar.LENGTH_LONG).show()
+            }
+        }
+
+    @RequiresApi(Build.VERSION_CODES.R)
+    private fun checkAndRequestStoragePermission() {
+        if (!Environment.isExternalStorageManager()) {
+            val intent = Intent(Settings.ACTION_MANAGE_ALL_FILES_ACCESS_PERMISSION)
+            launcher.launch(intent)
+        } else {
+            // Користувач вже надав дозвіл
+            // Ваш код для роботи з файловою системою
+        }
+    }
+
     @SuppressLint("NotifyDataSetChanged")
     @Deprecated("Deprecated in Java")
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
@@ -102,7 +125,6 @@ class HomeFragment : Fragment() {
                 val fileSystem = FileSystem()
                 val filePath: String = fileSystem.getFilePathFromUri(uri, requireContext(), mapsListFolderName)
 
-                // Перевіряємо, чи файл має розширення .zip
                 if (filePath.endsWith(".zip", ignoreCase = true)) {
                     val textInputDialog = TextInputDialog(binding.root.context)
                     textInputDialog.setOnTextEnteredListener(object : TextInputDialog.OnTextEnteredListener {
@@ -127,10 +149,8 @@ class HomeFragment : Fragment() {
                     })
                     textInputDialog.showDialog("Введіть назву для карти без пробілів та спецсимволів", "Підтвердити ввід", "Відмінити")
                 } else {
-                    // Якщо файл не має розширення .zip, ви можете взяти відповідні дії
                     archiveAdapter.notifyDataSetChanged()
                     Snackbar.make(binding.root, "Будь ласка, виберіть файл .zip", Snackbar.LENGTH_SHORT).show()
-
                 }
             }
         }
@@ -149,7 +169,6 @@ class HomeFragment : Fragment() {
         } else {
             Snackbar.make(binding.root, "Не вдалося видалити папку", Snackbar.LENGTH_SHORT).show()
         }
-
     }
 
     private fun onEditFolder(folderName: String) {
@@ -167,7 +186,6 @@ class HomeFragment : Fragment() {
                 }
 
                 if (fileSystem.renameFolder(File(mapFolderPath, folderName), File(mapFolderPath, enteredText))) {
-                    // Оновіть ім'я в списку та адаптері
                     val index = archivesList.indexOf(folderName)
                     archivesList[index] = enteredText
                     archiveAdapter.notifyDataSetChanged()
@@ -179,7 +197,6 @@ class HomeFragment : Fragment() {
         })
         textInputDialog.showDialog("Введіть нову назву для карти без пробілів та спецсимволів", "Підтвердити ввід", "Відмінити")
     }
-
 
     private fun onFolderItemClick(folderName: String) {
         FileSystem()
