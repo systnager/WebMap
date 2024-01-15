@@ -2,6 +2,7 @@ package com.bohdan2505.webmap
 
 import android.annotation.SuppressLint
 import android.app.Activity
+import android.app.ProgressDialog
 import android.content.Intent
 import android.os.Build
 import android.os.Bundle
@@ -153,14 +154,34 @@ class HomeFragment : Fragment() {
                                 return
                             }
 
-                            fileSystem.createAppDirectory(File(mapFolderPath, enteredText))
-                            Snackbar.make(binding.root, "Папку створено, очікуйте розпакування архіву", Snackbar.LENGTH_LONG).show()
-                            fileSystem.unzip(File(filePath), File(mapFolderPath, enteredText))
-                            fileSystem.deleteFile(File(filePath))
-                            binding.emptyStateTextView.text = ""
-                            archivesList.add(enteredText)
-                            archiveAdapter.notifyDataSetChanged()
-                            Snackbar.make(binding.root, "Архів розпаковано", Snackbar.LENGTH_LONG).show()
+                            val outputFolder = File(mapFolderPath, enteredText)
+                            val unzipProgressDialog = ProgressDialog(requireContext())
+                            unzipProgressDialog.setProgressStyle(ProgressDialog.STYLE_HORIZONTAL)
+                            unzipProgressDialog.setTitle("Розпакування архіву")
+                            unzipProgressDialog.setMessage("Будь ласка, зачекайте...")
+                            unzipProgressDialog.setCancelable(false)
+                            unzipProgressDialog.max = 100
+                            unzipProgressDialog.show()
+
+                            val unzipTask = UnzipAsyncTask(
+                                requireContext(),
+                                File(filePath),
+                                outputFolder,
+                                { progress ->
+                                    unzipProgressDialog.progress = progress
+                                }
+                            ) {
+                                unzipProgressDialog.dismiss()
+                                binding.emptyStateTextView.text = ""
+                                archivesList.add(enteredText)
+                                archiveAdapter.notifyDataSetChanged()
+                                Snackbar.make(
+                                    binding.root,
+                                    "Архів розпаковано",
+                                    Snackbar.LENGTH_LONG
+                                ).show()
+                            }
+                            unzipTask.execute()
                         }
                     })
                     textInputDialog.showDialog("Введіть назву для карти без пробілів та спецсимволів", "Підтвердити ввід", "Відмінити")
