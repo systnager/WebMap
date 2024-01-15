@@ -19,6 +19,7 @@ import androidx.navigation.fragment.findNavController
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.bohdan2505.webmap.databinding.FragmentHomeBinding
+import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.google.android.material.snackbar.Snackbar
 import kotlinx.coroutines.launch
 import java.io.File
@@ -87,10 +88,14 @@ class HomeFragment : Fragment() {
                 .setAction(Intent.ACTION_GET_CONTENT)
                 .putExtra(Intent.EXTRA_MIME_TYPES, arrayOf(zipMimeType))
 
-            startActivityForResult(
-                Intent.createChooser(intent, "Виберіть файл .zip"),
-                pickFileRequestCode
-            )
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+                startActivityForResult(
+                    Intent.createChooser(intent, "Виберіть файл .zip"),
+                    pickFileRequestCode
+                )
+            } else {
+                startActivityForResult(intent, pickFileRequestCode)
+            }
         }
     }
 
@@ -106,11 +111,22 @@ class HomeFragment : Fragment() {
 
     @RequiresApi(Build.VERSION_CODES.R)
     private fun checkAndRequestStoragePermission() {
-        if (!Environment.isExternalStorageManager()) {
-            val intent = Intent(Settings.ACTION_MANAGE_ALL_FILES_ACCESS_PERMISSION)
-            launcher.launch(intent)
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R && !Environment.isExternalStorageManager()) {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+                val intent = Intent(Settings.ACTION_MANAGE_ALL_FILES_ACCESS_PERMISSION)
+
+                MaterialAlertDialogBuilder(requireContext())
+                    .setTitle("Дозвіл на доступ до файлової системи")
+                    .setMessage("Додаток потребує доступу до файлової системи для збереження та відкриття файлів. Натисніть 'ОК', щоб надати дозвіл.")
+                    .setPositiveButton("ОК") { dialog, _ ->
+                        launcher.launch(intent)
+                        dialog.dismiss()
+                    }
+                    .setCancelable(false)
+                    .show()
+            }
         } else {
-            // Користувач вже надав дозвіл
+            // Користувач вже надав дозвіл або SDK_INT менше R
             // Ваш код для роботи з файловою системою
         }
     }
