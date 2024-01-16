@@ -4,6 +4,7 @@ import android.annotation.SuppressLint
 import android.app.Activity
 import android.app.ProgressDialog
 import android.content.Intent
+import android.content.pm.PackageManager
 import android.os.Build
 import android.os.Bundle
 import android.os.Environment
@@ -14,6 +15,8 @@ import android.view.ViewGroup
 import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.annotation.RequiresApi
+import androidx.core.app.ActivityCompat
+import androidx.core.content.ContextCompat.checkSelfPermission
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
@@ -36,6 +39,7 @@ class HomeFragment : Fragment() {
     private val appFolderPath = File(rootPath, appFolderName).absolutePath
     private val mapFolderPath = File(appFolderPath, mapsListFolderName).absolutePath
     private val pickFileRequestCode = 111
+    private val REQUEST_PERMISSION_CODE = 123
     private val zipMimeType = "application/zip"
     private val path_to_last_opened_map_name = "last_opened_map_name.txt"
 
@@ -128,7 +132,6 @@ class HomeFragment : Fragment() {
             }
         }
 
-    @RequiresApi(Build.VERSION_CODES.R)
     private fun checkAndRequestStoragePermission() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R && !Environment.isExternalStorageManager()) {
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
@@ -144,9 +147,30 @@ class HomeFragment : Fragment() {
                     .setCancelable(false)
                     .show()
             }
-        } else {
-            // Користувач вже надав дозвіл або SDK_INT менше R
-            // Ваш код для роботи з файловою системою
+        } else if (Build.VERSION.SDK_INT < Build.VERSION_CODES.R){
+            if ((ActivityCompat.checkSelfPermission(requireContext(), android.Manifest.permission.WRITE_EXTERNAL_STORAGE) == PackageManager.PERMISSION_GRANTED).not()) {
+                requestPermissions(
+                    arrayOf(android.Manifest.permission.WRITE_EXTERNAL_STORAGE),
+                    REQUEST_PERMISSION_CODE
+                )
+            }
+        }
+    }
+
+    @Deprecated("Deprecated in Java")
+    override fun onRequestPermissionsResult(
+        requestCode: Int,
+        permissions: Array<out String>,
+        grantResults: IntArray
+    ) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults)
+
+        if (requestCode == REQUEST_PERMISSION_CODE) {
+            if (grantResults.isNotEmpty() && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                Snackbar.make(binding.root, "Дозвіл надано", Snackbar.LENGTH_LONG).show()
+            } else {
+                Snackbar.make(binding.root, "Потрібно надати дозвіл. Роботу додатку не гарантовано", Snackbar.LENGTH_LONG).show()
+            }
         }
     }
 
