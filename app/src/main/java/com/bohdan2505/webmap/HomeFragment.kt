@@ -37,6 +37,7 @@ class HomeFragment : Fragment() {
     private val mapFolderPath = File(appFolderPath, mapsListFolderName).absolutePath
     private val pickFileRequestCode = 111
     private val zipMimeType = "application/zip"
+    private val path_to_last_opened_map_name = "last_opened_map_name.txt"
 
     private val archivesList = mutableListOf<String>()
     private lateinit var archiveAdapter: ArchiveAdapter
@@ -80,7 +81,24 @@ class HomeFragment : Fragment() {
         }
 
         binding.buttonFirst.setOnClickListener {
-            Snackbar.make(binding.root, "Запуск останньо відкритої карти. У розробці", Snackbar.LENGTH_LONG).show()
+            val fileSystem = FileSystem()
+            if (fileSystem.fileExists(File(appFolderPath, path_to_last_opened_map_name))) {
+                val content = fileSystem.readFileContent(File(appFolderPath, path_to_last_opened_map_name)).trim()
+                if (fileSystem.isFolderExists(File(mapFolderPath, content))) {
+                    val dataToPass = File("$mapFolderPath/$content/", "index.html").absolutePath
+                    val bundle = Bundle()
+                    bundle.putString("html_path", dataToPass)
+
+                    val destinationFragment = SecondFragment()
+                    destinationFragment.arguments = bundle
+
+                    findNavController().navigate(R.id.action_FirstFragment_to_SecondFragment, bundle)
+                } else {
+                    Snackbar.make(binding.root, "Виникла технічна помилка. Можливо, остання відкрита карта була перейменована чи видалена", Snackbar.LENGTH_LONG).show()
+                }
+            } else {
+                Snackbar.make(binding.root, "Жодна карта ще не відкривалась", Snackbar.LENGTH_LONG).show()
+            }
         }
 
         binding.chooseFileButton.setOnClickListener {
@@ -202,6 +220,9 @@ class HomeFragment : Fragment() {
             if (archivesList.isEmpty()) {
                 binding.emptyStateTextView.text = "Список порожній"
             }
+            if (folderName == fileSystem.readFileContent(File(appFolderPath, path_to_last_opened_map_name)).trim()) {
+                fileSystem.deleteFile(File(appFolderPath, path_to_last_opened_map_name))
+            }
             Snackbar.make(binding.root, "Папку видалено", Snackbar.LENGTH_SHORT).show()
         } else {
             Snackbar.make(binding.root, "Не вдалося видалити папку", Snackbar.LENGTH_SHORT).show()
@@ -223,6 +244,9 @@ class HomeFragment : Fragment() {
                 }
 
                 if (fileSystem.renameFolder(File(mapFolderPath, folderName), File(mapFolderPath, enteredText))) {
+                    if (folderName == fileSystem.readFileContent(File(appFolderPath, path_to_last_opened_map_name)).trim()) {
+                        fileSystem.writeToFile(File(appFolderPath, path_to_last_opened_map_name), enteredText)
+                    }
                     val index = archivesList.indexOf(folderName)
                     archivesList[index] = enteredText
                     archiveAdapter.notifyDataSetChanged()
@@ -236,10 +260,12 @@ class HomeFragment : Fragment() {
     }
 
     private fun onFolderItemClick(folderName: String) {
-        FileSystem()
+        val fileSystem = FileSystem()
         val dataToPass = File("$mapFolderPath/$folderName/", "index.html").absolutePath
         val bundle = Bundle()
         bundle.putString("html_path", dataToPass)
+
+        fileSystem.writeToFile(File(appFolderPath, path_to_last_opened_map_name), folderName)
 
         val destinationFragment = SecondFragment()
         destinationFragment.arguments = bundle

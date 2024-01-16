@@ -7,9 +7,12 @@ import android.net.Uri
 import android.os.Build
 import android.os.Environment
 import android.provider.OpenableColumns
+import java.io.BufferedReader
 import java.io.File
 import java.io.FileInputStream
 import java.io.FileOutputStream
+import java.io.FileReader
+import java.io.FileWriter
 import java.io.IOException
 import java.util.zip.ZipInputStream
 
@@ -163,5 +166,42 @@ class FileSystem {
 
     fun renameFolder(oldFolder: File, newFolder: File): Boolean {
         return oldFolder.renameTo(newFolder)
+    }
+
+    fun fileExists(file: File): Boolean {
+        return file.exists()
+    }
+
+    fun readFileContent(file: File): String {
+        val contentStringBuilder = StringBuilder()
+
+        try {
+            val bufferedReader = BufferedReader(FileReader(file))
+            var line: String?
+            while (bufferedReader.readLine().also { line = it } != null) {
+                contentStringBuilder.append(line).append("\n")
+            }
+
+            bufferedReader.close()
+        } catch (e: IOException) {
+            e.printStackTrace()
+        }
+
+        return contentStringBuilder.toString()
+    }
+
+    fun writeToFile(file: File, content: String): Boolean {
+        try {
+            if (!file.exists()) {
+                file.createNewFile()
+            }
+            val fileWriter = FileWriter(file)
+            fileWriter.write(content)
+            fileWriter.close()
+        } catch (e: IOException) {
+            return false
+        }
+
+        return true
     }
 }
