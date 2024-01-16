@@ -2,7 +2,6 @@ package com.bohdan2505.webmap
 
 import android.annotation.SuppressLint
 import android.os.Bundle
-import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -11,6 +10,8 @@ import android.webkit.WebResourceRequest
 import android.webkit.WebSettings
 import android.webkit.WebView
 import android.webkit.WebViewClient
+import androidx.appcompat.app.AppCompatActivity
+import androidx.fragment.app.Fragment
 import com.bohdan2505.webmap.databinding.FragmentSecondBinding
 
 /**
@@ -19,15 +20,14 @@ import com.bohdan2505.webmap.databinding.FragmentSecondBinding
 class SecondFragment : Fragment() {
 
     private var _binding: FragmentSecondBinding? = null
-
     private val binding get() = _binding!!
 
     @SuppressLint("SetJavaScriptEnabled")
     override fun onCreateView(
-            inflater: LayoutInflater, container: ViewGroup?,
-            savedInstanceState: Bundle?
+        inflater: LayoutInflater, container: ViewGroup?,
+        savedInstanceState: Bundle?
     ): View {
-
+        (activity as? AppCompatActivity)?.supportActionBar?.hide()
         _binding = FragmentSecondBinding.inflate(inflater, container, false)
         val pathToHtml = arguments?.getString("html_path").toString()
         val mapWebView: WebView = binding.root.findViewById(R.id.map_web_view)
@@ -37,25 +37,23 @@ class SecondFragment : Fragment() {
         mapWebView.webChromeClient = WebChromeClient()
         mapWebView.webViewClient = object : WebViewClient() {
             override fun shouldOverrideUrlLoading(view: WebView?, request: WebResourceRequest?): Boolean {
-                // Запобігає відкриттю сторінок у сторонніх браузерах
                 view?.loadUrl(request?.url.toString())
                 return true
             }
         }
-        // Вказати шлях до index.html у внутрішній директорії додатка
         mapWebView.loadUrl("file:///$pathToHtml")
 
-
         return binding.root
-
-    }
-
-    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
-        super.onViewCreated(view, savedInstanceState)
     }
 
     override fun onDestroyView() {
+        (activity as? AppCompatActivity)?.supportActionBar?.show()
         super.onDestroyView()
         _binding = null
+    }
+
+    override fun onResume() {
+        (activity as? AppCompatActivity)?.supportActionBar?.hide()
+        super.onResume()
     }
 }
