@@ -28,7 +28,7 @@
         android:theme="@style/Theme.WebMap"
         tools:targetApi="31">
         <activity
-            android:screenOrientation="locked"
+            android:configChanges="keyboard|keyboardHidden|orientation|screenLayout|uiMode|screenSize|smallestScreenSize"
             android:name=".MainActivity"
             android:exported="true"
             android:label="@string/app_name"
