@@ -63,6 +63,8 @@ class SecondFragment : Fragment() {
         webSettings.setGeolocationDatabasePath(context.filesDir.path)
 
         mapWebView.webChromeClient = MyClient()
+        mapWebView.addJavascriptInterface(JavaScriptInterface(binding.root.context), "Android");
+        //mapWebView.loadUrl("file:///android_asset/index.html")
         mapWebView.loadUrl("file:///$pathToHtml")
     }
 
