@@ -67,7 +67,7 @@ class HomeFragment : Fragment() {
             }
             archiveAdapter.notifyDataSetChanged()
             if (archivesList.isEmpty()) {
-                binding.emptyStateTextView.text = "Список порожній"
+                binding.emptyStateTextView.text = resources.getString(R.string.empty_list)
             } else {
                 binding.emptyStateTextView.text = ""
             }
@@ -98,10 +98,10 @@ class HomeFragment : Fragment() {
 
                     findNavController().navigate(R.id.action_FirstFragment_to_SecondFragment, bundle)
                 } else {
-                    Snackbar.make(binding.root, "Виникла технічна помилка. Можливо, остання відкрита карта була перейменована чи видалена", Snackbar.LENGTH_LONG).show()
+                    Snackbar.make(binding.root, resources.getString(R.string.access_folder_error), Snackbar.LENGTH_LONG).show()
                 }
             } else {
-                Snackbar.make(binding.root, "Жодна карта ще не відкривалась", Snackbar.LENGTH_LONG).show()
+                Snackbar.make(binding.root, resources.getString(R.string.no_recently_opened_map), Snackbar.LENGTH_LONG).show()
             }
         }
 
@@ -113,7 +113,7 @@ class HomeFragment : Fragment() {
 
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
                 startActivityForResult(
-                    Intent.createChooser(intent, "Виберіть файл .zip"),
+                    Intent.createChooser(intent, resources.getString(R.string.choose_zip)),
                     pickFileRequestCode
                 )
             } else {
@@ -126,9 +126,9 @@ class HomeFragment : Fragment() {
     private val launcher: ActivityResultLauncher<Intent> =
         registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
             if (Environment.isExternalStorageManager()) {
-                Snackbar.make(binding.root, "Дозвіл надано", Snackbar.LENGTH_LONG).show()
+                Snackbar.make(binding.root, resources.getString(R.string.permission_granted), Snackbar.LENGTH_LONG).show()
             } else {
-                Snackbar.make(binding.root, "Потрібно надати дозвіл. Роботу додатку не гарантовано", Snackbar.LENGTH_LONG).show()
+                Snackbar.make(binding.root, resources.getString(R.string.access_requeired), Snackbar.LENGTH_LONG).show()
             }
         }
 
@@ -138,9 +138,9 @@ class HomeFragment : Fragment() {
                 val intent = Intent(Settings.ACTION_MANAGE_ALL_FILES_ACCESS_PERMISSION)
 
                 MaterialAlertDialogBuilder(requireContext())
-                    .setTitle("Дозвіл на доступ до файлової системи")
-                    .setMessage("Додаток потребує доступу до файлової системи для збереження та відкриття файлів. Натисніть 'ОК', щоб надати дозвіл.")
-                    .setPositiveButton("ОК") { dialog, _ ->
+                    .setTitle(resources.getString(R.string.access_to_filesystem))
+                    .setMessage(resources.getString(R.string.access_permission_required_warning))
+                    .setPositiveButton(resources.getString(R.string.confirm)) { dialog, _ ->
                         launcher.launch(intent)
                         dialog.dismiss()
                     }
@@ -167,9 +167,9 @@ class HomeFragment : Fragment() {
 
         if (requestCode == REQUEST_PERMISSION_CODE) {
             if (grantResults.isNotEmpty() && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-                Snackbar.make(binding.root, "Дозвіл надано", Snackbar.LENGTH_LONG).show()
+                Snackbar.make(binding.root, resources.getString(R.string.permission_granted), Snackbar.LENGTH_LONG).show()
             } else {
-                Snackbar.make(binding.root, "Потрібно надати дозвіл. Роботу додатку не гарантовано", Snackbar.LENGTH_LONG).show()
+                Snackbar.make(binding.root, resources.getString(R.string.access_requeired), Snackbar.LENGTH_LONG).show()
             }
         }
     }
@@ -189,18 +189,18 @@ class HomeFragment : Fragment() {
                     textInputDialog.setOnTextEnteredListener(object : TextInputDialog.OnTextEnteredListener {
                         override fun onTextEntered(enteredText: String) {
                             if (!fileSystem.isValidFolderName(enteredText)) {
-                                Snackbar.make(binding.root, "Невалідна назва. Видаліть спецсимволи, пробіли та обмежте довжину до 255 символів", Snackbar.LENGTH_LONG).show()
+                                Snackbar.make(binding.root, resources.getString(R.string.incorrect_folder_name), Snackbar.LENGTH_LONG).show()
                                 return
                             } else if (fileSystem.isFolderExists(File(mapFolderPath, enteredText))) {
-                                Snackbar.make(binding.root, "Така папка вже існує", Snackbar.LENGTH_LONG).show()
+                                Snackbar.make(binding.root, resources.getString(R.string.folder_already_exists), Snackbar.LENGTH_LONG).show()
                                 return
                             }
 
                             val outputFolder = File(mapFolderPath, enteredText)
                             val unzipProgressDialog = ProgressDialog(requireContext())
                             unzipProgressDialog.setProgressStyle(ProgressDialog.STYLE_HORIZONTAL)
-                            unzipProgressDialog.setTitle("Розпакування архіву")
-                            unzipProgressDialog.setMessage("Будь ласка, зачекайте...")
+                            unzipProgressDialog.setTitle(resources.getString(R.string.unpacking_archive))
+                            unzipProgressDialog.setMessage(resources.getString(R.string.please_wait))
                             unzipProgressDialog.setCancelable(false)
                             unzipProgressDialog.max = 100
                             unzipProgressDialog.show()
@@ -219,17 +219,17 @@ class HomeFragment : Fragment() {
                                 archiveAdapter.notifyDataSetChanged()
                                 Snackbar.make(
                                     binding.root,
-                                    "Архів розпаковано",
+                                    resources.getString(R.string.archive_unpacked),
                                     Snackbar.LENGTH_LONG
                                 ).show()
                             }
                             unzipTask.execute()
                         }
                     })
-                    textInputDialog.showDialog("Введіть назву для карти без пробілів та спецсимволів", "Підтвердити ввід", "Відмінити")
+                    textInputDialog.showDialog(resources.getString(R.string.enter_folder_name), resources.getString(R.string.confirm), resources.getString(R.string.cancel))
                 } else {
                     archiveAdapter.notifyDataSetChanged()
-                    Snackbar.make(binding.root, "Будь ласка, виберіть файл .zip", Snackbar.LENGTH_SHORT).show()
+                    Snackbar.make(binding.root, resources.getString(R.string.choose_zip), Snackbar.LENGTH_SHORT).show()
                 }
             }
         }
@@ -242,14 +242,14 @@ class HomeFragment : Fragment() {
             archivesList.remove(folderName)
             archiveAdapter.notifyDataSetChanged()
             if (archivesList.isEmpty()) {
-                binding.emptyStateTextView.text = "Список порожній"
+                binding.emptyStateTextView.text = resources.getString(R.string.empty_list)
             }
             if (folderName == fileSystem.readFileContent(File(appFolderPath, path_to_last_opened_map_name)).trim()) {
                 fileSystem.deleteFile(File(appFolderPath, path_to_last_opened_map_name))
             }
-            Snackbar.make(binding.root, "Папку видалено", Snackbar.LENGTH_SHORT).show()
+            Snackbar.make(binding.root, resources.getString(R.string.folder_deleted), Snackbar.LENGTH_SHORT).show()
         } else {
-            Snackbar.make(binding.root, "Не вдалося видалити папку", Snackbar.LENGTH_SHORT).show()
+            Snackbar.make(binding.root, resources.getString(R.string.could_not_renamed_folder), Snackbar.LENGTH_SHORT).show()
         }
     }
 
@@ -260,10 +260,10 @@ class HomeFragment : Fragment() {
             @SuppressLint("NotifyDataSetChanged")
             override fun onTextEntered(enteredText: String) {
                 if (!fileSystem.isValidFolderName(enteredText)) {
-                    Snackbar.make(binding.root, "Невалідна назва. Видаліть спецсимволи, пробіли та обмежте довжину до 255 символів", Snackbar.LENGTH_LONG).show()
+                    Snackbar.make(binding.root, resources.getString(R.string.incorrect_folder_name), Snackbar.LENGTH_LONG).show()
                     return
                 } else if (fileSystem.isFolderExists(File(mapFolderPath, enteredText))) {
-                    Snackbar.make(binding.root, "Така папка вже існує", Snackbar.LENGTH_LONG).show()
+                    Snackbar.make(binding.root, resources.getString(R.string.folder_already_exists), Snackbar.LENGTH_LONG).show()
                     return
                 }
 
@@ -274,13 +274,13 @@ class HomeFragment : Fragment() {
                     val index = archivesList.indexOf(folderName)
                     archivesList[index] = enteredText
                     archiveAdapter.notifyDataSetChanged()
-                    Snackbar.make(binding.root, "Папку перейменовано", Snackbar.LENGTH_LONG).show()
+                    Snackbar.make(binding.root, resources.getString(R.string.folder_renamed), Snackbar.LENGTH_LONG).show()
                 } else {
-                    Snackbar.make(binding.root, "Не вдалося перейменувати папку", Snackbar.LENGTH_LONG).show()
+                    Snackbar.make(binding.root, resources.getString(R.string.could_not_renamed_folder), Snackbar.LENGTH_LONG).show()
                 }
             }
         })
-        textInputDialog.showDialog("Введіть нову назву для карти без пробілів та спецсимволів", "Підтвердити ввід", "Відмінити")
+        textInputDialog.showDialog(resources.getString(R.string.enter_folder_name), resources.getString(R.string.confirm), resources.getString(R.string.cancel))
     }
 
     private fun onFolderItemClick(folderName: String) {
