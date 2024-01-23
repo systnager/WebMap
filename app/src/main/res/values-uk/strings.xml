@@ -25,4 +25,6 @@
     <string name="enter_folder_name">Введіть назву для карти без пробілів та спецсимволів</string>
     <string name="could_not_renamed_folder">Не вдалося видалити папку</string>
     <string name="latest_map">Остання карта</string>
+    <string name="downloaded_file_saved">Файл успішно збережено до папки завантажень</string>
+    <string name="file_exist">Файл вже існує</string>
 </resources>

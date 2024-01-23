@@ -25,4 +25,6 @@
     <string name="enter_folder_name">Enter a name for the map without spaces or special characters</string>
     <string name="could_not_renamed_folder">Failed to delete folder</string>
     <string name="latest_map">Latest map</string>
+    <string name="downloaded_file_saved">File successful downloaded to Download folder</string>
+    <string name="file_exist">File already exist</string>
 </resources>

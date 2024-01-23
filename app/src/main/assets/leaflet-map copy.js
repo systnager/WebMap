@@ -193,6 +193,9 @@ function save_layer (layer_id, layer_name) {
          function download(content, fileName, contentType) {
          var a = document.createElement("a");
          var file = new Blob([content], {type: contentType});
+         if (Android) {
+             Android.downloadFile(JSON.stringify(collection), layer_name + '.geojson');
+         }
          saveAs(file, fileName);
      }
      download([JSON.stringify(collection)], layer_name + '.geojson', "text/plain;charset=utf-8")
