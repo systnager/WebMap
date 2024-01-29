@@ -1,11 +1,8 @@
 package com.bohdan2505.webmap
 
-import android.R.attr.path
 import android.annotation.SuppressLint
 import android.content.Context
 import android.net.Uri
-import android.os.Build
-import android.os.Environment
 import android.provider.OpenableColumns
 import java.io.BufferedReader
 import java.io.File

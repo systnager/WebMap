@@ -45,7 +45,6 @@ class SecondFragment : Fragment() {
         _binding = FragmentSecondBinding.inflate(inflater, container, false)
 
         val REQUEST_CODE_PERMISSION_ACCESS_FINE_LOCATION = 100
-
         activity?.let {
             ActivityCompat.requestPermissions(
                 it, arrayOf<String>(Manifest.permission.ACCESS_FINE_LOCATION),
@@ -86,7 +85,6 @@ class SecondFragment : Fragment() {
             ): Boolean {
                 fileUploadCallback?.onReceiveValue(null)
                 fileUploadCallback = filePathCallback
-
                 if (fileChooserParams?.acceptTypes?.contains("*/*") == true && fileChooserParams.isCaptureEnabled) {
                 } else {
                     val intent = Intent(Intent.ACTION_GET_CONTENT)
@@ -101,6 +99,7 @@ class SecondFragment : Fragment() {
         }
 
         mapWebView.loadUrl("file:///$pathToHtml")
+        //mapWebView.loadUrl("file:///android_asset/index.html")
     }
 
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {

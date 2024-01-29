@@ -1,15 +1,21 @@
 package com.bohdan2505.webmap
 
+import android.app.Instrumentation
 import android.content.ClipData
 import android.content.ClipboardManager
 import android.content.Context
+import android.content.Intent
 import android.content.pm.PackageManager
 import android.os.Build
 import android.os.Build.VERSION.SDK_INT
 import android.os.Environment
 import android.webkit.JavascriptInterface
 import android.widget.Toast
+import androidx.activity.result.ActivityResultLauncher
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
+import androidx.documentfile.provider.DocumentFile
 import java.io.File
 import java.io.IOException
 import java.io.PrintWriter
@@ -26,30 +32,9 @@ class JavaScriptInterface(private val context: Context) {
 
     @JavascriptInterface
     fun downloadFile(fileContent: String?, fileName: String?) {
-        try {
-            val f = fileName?.let { File("sdcard/Download", it) }
-            if (f != null) {
-                if (!f.exists()) {
-                    f.createNewFile()
-                    val printWriter = PrintWriter(f)
-                    printWriter.print(fileContent)
-                    printWriter.close()
-                    Toast.makeText(
-                        context,
-                        context.resources.getString(R.string.downloaded_file_saved),
-                        Toast.LENGTH_LONG
-                    ).show()
-                } else {
-                    Toast.makeText(context, context.resources.getString(R.string.file_exist), Toast.LENGTH_LONG).show()
-                }
-            }
-        } catch (e: IOException) {
-            Toast.makeText(
-                context,
-                context.resources.getString(R.string.access_folder_error),
-                Toast.LENGTH_LONG
-            ).show()
-            e.printStackTrace()
+        val fileSystem = FileSystem()
+        if (fileContent != null) {
+            fileSystem.writeToFile(File("sdcard/Download/$fileName"), fileContent)
         }
     }
 }
