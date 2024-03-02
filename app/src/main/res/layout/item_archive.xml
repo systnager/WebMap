@@ -8,15 +8,16 @@
     <TextView
         android:id="@+id/folderName"
         android:layout_width="0dp"
+        android:layout_height="match_parent"
         android:layout_weight="1"
-        android:layout_height="wrap_content"
-        android:textSize="18sp"
-        android:padding="10dp"/>
+        android:padding="10dp"
+        android:textSize="18sp" />
 
     <ImageButton
         android:id="@+id/deleteButton"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
+        android:backgroundTint="#00009688"
         android:contentDescription="Delete"
         android:src="@android:drawable/ic_delete" />
 
@@ -24,6 +25,7 @@
         android:id="@+id/editButton"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
+        android:backgroundTint="#00009688"
         android:contentDescription="Edit"
         android:src="@android:drawable/ic_menu_edit" />
 </LinearLayout>
