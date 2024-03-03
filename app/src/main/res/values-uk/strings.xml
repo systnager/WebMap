@@ -22,7 +22,7 @@
     <string name="access_to_filesystem">Дозвіл на доступ до файлової системи</string>
     <string name="access_permission_required_warning">Додаток потребує доступу до файлової системи для збереження та відкриття файлів. Натисніть \'ОК\', щоб надати дозвіл.</string>
     <string name="incorrect_folder_name">Невалідна назва. Видаліть спецсимволи, пробіли та обмежте довжину до 255 символів</string>
-    <string name="enter_folder_name">Введіть назву для карти без пробілів та спецсимволів</string>
+    <string name="enter_folder_name">Введіть назву латиницею без пробілів та спецсимволів</string>
     <string name="could_not_renamed_folder">Не вдалося видалити папку</string>
     <string name="latest_map">Остання карта</string>
     <string name="downloaded_file_saved">Файл успішно збережено до папки завантажень</string>

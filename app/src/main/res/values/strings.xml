@@ -22,7 +22,7 @@
     <string name="access_permission_required_warning">The application requires access to the file system to save and open files. Click \'OK\' to grant permission.</string>
     <string name="access_to_filesystem">Permission to access the file system</string>
     <string name="incorrect_folder_name">Invalid name. Remove special characters, spaces, and limit the length to 255 characters</string>
-    <string name="enter_folder_name">Enter a name for the map without spaces or special characters</string>
+    <string name="enter_folder_name">Enter the name in Latin without spaces and special characters</string>
     <string name="could_not_renamed_folder">Failed to delete folder</string>
     <string name="latest_map">Latest map</string>
     <string name="downloaded_file_saved">File successful downloaded to Download folder</string>
