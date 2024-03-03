@@ -4,6 +4,7 @@ import android.annotation.SuppressLint
 import android.app.Activity
 import android.app.ProgressDialog
 import android.content.Intent
+import android.content.SharedPreferences
 import android.content.pm.PackageManager
 import android.net.Uri
 import android.os.Build
@@ -28,7 +29,6 @@ import com.google.android.material.snackbar.Snackbar
 import kotlinx.coroutines.launch
 import java.io.File
 
-
 class HomeFragment : Fragment() {
 
     private var _binding: FragmentHomeBinding? = null
@@ -36,16 +36,23 @@ class HomeFragment : Fragment() {
 
     private val appFolderName = "WebMap"
     private val mapsListFolderName = "maps"
-    private val rootPath = Environment.getExternalStorageDirectory().absolutePath
-    private val appFolderPath = File(rootPath, appFolderName).absolutePath
-    private val mapFolderPath = File(appFolderPath, mapsListFolderName).absolutePath
-    private val pickFileRequestCode = 111
-    private val REQUEST_PERMISSION_CODE = 123
-    private val zipMimeType = "application/zip"
     private val path_to_last_opened_map_name = "last_opened_map_name.txt"
 
     private val archivesList = mutableListOf<String>()
     private lateinit var archiveAdapter: ArchiveAdapter
+
+    private val PREFS_NAME = "MyAppPrefs"
+    private val KEY_FOLDER_PATH = "FolderPath"
+
+    private val rootPath: String  = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOCUMENTS).absolutePath
+
+    private val appFolderPath: String = File(rootPath, appFolderName).absolutePath
+
+    private val mapFolderPath: String = File(appFolderPath, mapsListFolderName).absolutePath
+
+    private val pickFileRequestCode = 111
+    private val REQUEST_PERMISSION_CODE = 123
+    private val zipMimeType = "application/zip"
 
     @SuppressLint("NotifyDataSetChanged")
     override fun onCreateView(
@@ -140,21 +147,7 @@ class HomeFragment : Fragment() {
         }
 
     private fun checkAndRequestStoragePermission() {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R && !Environment.isExternalStorageManager()) {
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
-                val intent = Intent(Settings.ACTION_MANAGE_ALL_FILES_ACCESS_PERMISSION)
-
-                MaterialAlertDialogBuilder(requireContext())
-                    .setTitle(resources.getString(R.string.access_to_filesystem))
-                    .setMessage(resources.getString(R.string.access_permission_required_warning))
-                    .setPositiveButton(resources.getString(R.string.confirm)) { dialog, _ ->
-                        launcher.launch(intent)
-                        dialog.dismiss()
-                    }
-                    .setCancelable(false)
-                    .show()
-            }
-        } else if (Build.VERSION.SDK_INT < Build.VERSION_CODES.R){
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.R){
             if ((ActivityCompat.checkSelfPermission(requireContext(), android.Manifest.permission.WRITE_EXTERNAL_STORAGE) == PackageManager.PERMISSION_GRANTED).not()) {
                 requestPermissions(
                     arrayOf(android.Manifest.permission.WRITE_EXTERNAL_STORAGE),
