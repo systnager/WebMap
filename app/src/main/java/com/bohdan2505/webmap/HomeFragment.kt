@@ -4,13 +4,11 @@ import android.annotation.SuppressLint
 import android.app.Activity
 import android.app.ProgressDialog
 import android.content.Intent
-import android.content.SharedPreferences
 import android.content.pm.PackageManager
 import android.net.Uri
 import android.os.Build
 import android.os.Bundle
 import android.os.Environment
-import android.provider.Settings
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -24,7 +22,6 @@ import androidx.navigation.fragment.findNavController
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.bohdan2505.webmap.databinding.FragmentHomeBinding
-import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.google.android.material.snackbar.Snackbar
 import kotlinx.coroutines.launch
 import java.io.File
@@ -40,15 +37,10 @@ class HomeFragment : Fragment() {
 
     private val archivesList = mutableListOf<String>()
     private lateinit var archiveAdapter: ArchiveAdapter
+    private lateinit var rootPath: String
+    private lateinit var appFolderPath: String
 
-    private val PREFS_NAME = "MyAppPrefs"
-    private val KEY_FOLDER_PATH = "FolderPath"
-
-    private val rootPath: String  = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOCUMENTS).absolutePath
-
-    private val appFolderPath: String = File(rootPath, appFolderName).absolutePath
-
-    private val mapFolderPath: String = File(appFolderPath, mapsListFolderName).absolutePath
+    private lateinit var mapFolderPath: String
 
     private val pickFileRequestCode = 111
     private val REQUEST_PERMISSION_CODE = 123
@@ -60,6 +52,14 @@ class HomeFragment : Fragment() {
         savedInstanceState: Bundle?
     ): View {
         _binding = FragmentHomeBinding.inflate(inflater, container, false)
+        rootPath = if (Build.VERSION.SDK_INT < Build.VERSION_CODES.R) {
+            Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOCUMENTS).absolutePath
+        } else {
+            requireContext().applicationInfo.dataDir
+        }
+        appFolderPath = File(rootPath, appFolderName).absolutePath
+
+        mapFolderPath = File(appFolderPath, mapsListFolderName).absolutePath
 
         val parentFolder = File(mapFolderPath)
         val childDirectories = parentFolder.listFiles { file -> file.isDirectory }

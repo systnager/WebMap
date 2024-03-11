@@ -2,6 +2,7 @@ package com.bohdan2505.webmap
 
 import android.annotation.SuppressLint
 import android.content.Context
+import android.content.Intent
 import android.net.Uri
 import android.provider.OpenableColumns
 import java.io.BufferedReader
@@ -42,17 +43,25 @@ class FileSystem {
         return filePath
     }
 
+    @SuppressLint("SetWorldReadable", "SetWorldWritable")
     fun createAppDirectory(appDirectory: File): File {
         if (!appDirectory.exists()) {
             appDirectory.mkdir()
+            appDirectory.setReadable(true, false)
+            appDirectory.setWritable(true, false)
+            appDirectory.setExecutable(true, false)
         }
 
         return appDirectory
     }
 
+    @SuppressLint("SetWorldWritable", "SetWorldReadable")
     fun copyFileToAppDirectory(sourceFilePath: String, destinationDirectory: File) {
         val sourceFile = File(sourceFilePath)
         val destinationFile = File(destinationDirectory, sourceFile.name)
+        destinationFile.setReadable(true, false)
+        destinationFile.setWritable(true, false)
+        destinationFile.setExecutable(true, false)
 
         try {
             val sourceChannel = FileInputStream(sourceFile).channel
@@ -82,6 +91,7 @@ class FileSystem {
         return folder.exists() && folder.isDirectory
     }
 
+    @SuppressLint("SetWorldWritable", "SetWorldReadable")
     fun unzip(zipFile: File, outputFolder: File) {
         val buffer = ByteArray(1024)
 
@@ -95,6 +105,9 @@ class FileSystem {
 
                 if (zipEntry.isDirectory) {
                     outputFile.mkdirs()
+                    outputFile.setReadable(true, false)
+                    outputFile.setWritable(true, false)
+                    outputFile.setExecutable(true, false)
                 } else {
                     val outputStream = FileOutputStream(outputFile)
                     var len: Int
@@ -128,10 +141,14 @@ class FileSystem {
         }
     }
 
+    @SuppressLint("SetWorldReadable", "SetWorldWritable")
     fun copyFiles(source: File, destination: File) {
         if (source.isDirectory) {
             if (!destination.exists()) {
                 destination.mkdirs()
+                destination.setReadable(true, false)
+                destination.setWritable(true, false)
+                destination.setExecutable(true, false)
             }
 
             val files = source.listFiles()
@@ -187,10 +204,14 @@ class FileSystem {
         return contentStringBuilder.toString()
     }
 
+    @SuppressLint("SetWorldReadable", "SetWorldWritable")
     fun writeToFile(file: File, content: String): Boolean {
         try {
             if (!file.exists()) {
                 file.createNewFile()
+                file.setReadable(true, false)
+                file.setWritable(true, false)
+                file.setExecutable(true, false)
             }
             val fileWriter = FileWriter(file)
             fileWriter.write(content)
