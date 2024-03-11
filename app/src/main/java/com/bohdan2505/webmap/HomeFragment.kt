@@ -83,11 +83,6 @@ class HomeFragment : Fragment() {
     @RequiresApi(Build.VERSION_CODES.R)
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-
-        viewLifecycleOwner.lifecycleScope.launch {
-            checkAndRequestStoragePermission()
-        }
-
         binding.buttonFirst.setOnClickListener {
             val fileSystem = FileSystem()
             if (fileSystem.fileExists(File(appFolderPath, path_to_last_opened_map_name))) {
@@ -141,18 +136,6 @@ class HomeFragment : Fragment() {
                 Snackbar.make(binding.root, resources.getString(R.string.access_requeired), Snackbar.LENGTH_LONG).show()
             }
         }
-
-    private fun checkAndRequestStoragePermission() {
-        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.R){
-            if ((ActivityCompat.checkSelfPermission(requireContext(), android.Manifest.permission.WRITE_EXTERNAL_STORAGE) == PackageManager.PERMISSION_GRANTED).not()) {
-                requestPermissions(
-                    arrayOf(android.Manifest.permission.WRITE_EXTERNAL_STORAGE),
-                    REQUEST_PERMISSION_CODE
-                )
-            }
-        }
-    }
-
     @Deprecated("Deprecated in Java")
     override fun onRequestPermissionsResult(
         requestCode: Int,
