@@ -52,11 +52,7 @@ class HomeFragment : Fragment() {
         savedInstanceState: Bundle?
     ): View {
         _binding = FragmentHomeBinding.inflate(inflater, container, false)
-        rootPath = if (Build.VERSION.SDK_INT < Build.VERSION_CODES.R) {
-            Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOCUMENTS).absolutePath
-        } else {
-            requireContext().applicationInfo.dataDir
-        }
+        rootPath = requireContext().applicationInfo.dataDir
         appFolderPath = File(rootPath, appFolderName).absolutePath
 
         mapFolderPath = File(appFolderPath, mapsListFolderName).absolutePath
